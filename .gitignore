@@ -1,0 +1,16 @@
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+instance/
+*.db
+
+# Node
+node_modules/
+.next/
+out/
