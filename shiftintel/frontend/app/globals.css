@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+@media print {
+  /* Hide everything except the report content */
+  nav, aside, .sidebar, .no-print {
+    display: none !important;
+  }
+
+  /* White background for PDF */
+  body, html {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Make report content full width */
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+
+  /* Dark cards become white cards in PDF */
+  .bg-zinc-900, .bg-zinc-950 {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  /* Text becomes dark for PDF readability */
+  .text-zinc-100, .text-zinc-200, .text-zinc-300 {
+    color: #111827 !important;
+  }
+
+  .text-zinc-400, .text-zinc-500 {
+    color: #6b7280 !important;
+  }
+
+  /* Anomaly banner — dark text on white for PDF readability */
+  .anomaly-banner {
+    page-break-inside: avoid;
+    background: white !important;
+    border: 1px solid #fca5a5 !important;
+    animation: none !important;
+  }
+
+  .anomaly-banner .text-red-300 {
+    color: #b91c1c !important;
+  }
+
+  .anomaly-banner .text-red-100,
+  .anomaly-banner .text-red-50 {
+    color: #111827 !important;
+  }
+
+  .anomaly-banner .bg-red-700 {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+  }
+
+  /* PDF header */
+  .pdf-header {
+    display: block !important;
+  }
+}
+
+/* Hidden on screen, visible in PDF only */
+.pdf-header {
+  display: none;
+}
