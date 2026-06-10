@@ -23,12 +23,16 @@ export default function ChatWidget() {
     if (!input.trim()) return
 
     const userMsg: Message = { role: 'user', content: input }
-    setMessages(prev => [...prev, userMsg])
+    const updatedMessages = [...messages, userMsg]
+    //add user message to chat immediately
+    setMessages(updatedMessages)
     setInput('')
     setLoading(true)
 
     try {
-      const data = await sendChat(input)
+      //call backend
+      const history = updatedMessages.slice(1)
+      const data = await sendChat(input, history)
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: data.reply }

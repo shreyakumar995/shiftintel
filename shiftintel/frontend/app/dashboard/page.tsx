@@ -1,8 +1,11 @@
 "use client";
 
-import { getReports } from "@/lib/api";
+import { deleteReport, getReports } from "@/lib/api";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import SkeletonRow from '@/components/SkeletonRow'
+import toast from 'react-hot-toast'
+
 
 type Severity = "Low" | "Medium" | "High" | "Critical";
 
@@ -62,6 +65,7 @@ export default function DashboardPage() {
         const rows = (data as Record<string, unknown>[]).map(mapApiToRow);
         setReports(rows);
       } catch (err) {
+        toast.error("Failed to load reports");
         setError(
           err instanceof Error ? err.message : "Failed to load reports"
         );
@@ -82,17 +86,24 @@ export default function DashboardPage() {
     });
   }, [reports, zoneFilter, severityFilter]);
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this report? This cannot be undone.")) return;
+
+    try {
+      await deleteReport(id);
+      setReports((prev) => prev.filter((report) => report.id !== id));
+      toast.success("Report deleted successfully");
+    } catch (err) {
+      toast.error("Failed to delete report");
+      setError(
+        err instanceof Error ? err.message : "Failed to delete report"
+      );
+    }
+  };
+
   const totalReports = reports.length;
   const criticalCount = reports.filter((r) => r.severity === "Critical").length;
   const anomalyCount = reports.filter((r) => r.anomaly).length;
-
-  if (loading) {
-    return (
-      <div className="flex min-h-48 items-center justify-center">
-        <p className="text-sm text-zinc-400">Loading reports...</p>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -213,7 +224,12 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filteredReports.map((report) => (
+              {loading &&(
+                Array.from({length: 5}).map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))
+              )}
+              {!loading && filteredReports.map((report) => (
                 <tr
                   key={report.id}
                   className="transition-colors hover:bg-white/5"
@@ -245,12 +261,21 @@ export default function DashboardPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/report/${report.id}`}
-                      className="inline-flex items-center rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-500"
-                    >
-                      View Report
-                    </Link>
+                    <div className="inline-flex items-center gap-2">
+                      <Link
+                        href={`/report/${report.id}`}
+                        className="inline-flex items-center rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-500"
+                      >
+                        View Report
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(report.id)}
+                        className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -258,13 +283,13 @@ export default function DashboardPage() {
           </table>
         </div>
 
-        {reports.length === 0 && (
+        {!loading && reports.length === 0 && (
           <div className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-400">
             No reports yet. Submit your first shift report.
           </div>
         )}
 
-        {reports.length > 0 && filteredReports.length === 0 && (
+        {!loading && reports.length > 0 && filteredReports.length === 0 && (
           <div className="border-t border-white/10 px-4 py-8 text-center text-sm text-zinc-400">
             No reports match the selected filters.
           </div>

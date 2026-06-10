@@ -31,11 +31,18 @@ export async function getReport(id: string) {
   if (!res.ok) throw new Error('Failed to fetch report')
   return res.json()
 }
-export async function sendChat(message: string){
+
+export async function deleteReport(id: number) {
+  const res = await fetch(`${BASE}/reports/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to delete report')
+  return res.json()
+}
+export async function sendChat(message: string,
+history:{role:string;content:string}[]){
   const res = await fetch(`${BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
+    body: JSON.stringify({ message,history})
   })
   if (!res.ok) throw new Error('Failed to send chat')
   return res.json()

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarNav } from "./_components/SidebarNav";
 import ChatWidget from "@/components/Chatwidget";
+import { Toaster } from "react-hot-toast";
 
 
 const geistSans = Geist({
@@ -52,6 +53,18 @@ export default function RootLayout({
             </header>
             <main className="p-6">{children}</main>
           </div>
+          <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "#18181b",
+              color: "#f4f4f5",
+              border: '1px solid rgba(255,255,255,0.1)',
+            },
+            success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          }}
+          />
 
         </div>
         <ChatWidget />

@@ -3,6 +3,7 @@
 import { submitReport } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const PROCESSING_STEPS = [
   "Extracting structured data...",
@@ -87,8 +88,10 @@ export default function SubmitReportPage() {
 
     try {
       const result = await submitReport(formData);
+      toast.success("Report submitted successfully");
       router.push(`/report/${result.id}`);
     } catch (err) {
+      toast.error("Failed to submit report");
       setError(
         err instanceof Error ? err.message : "Failed to generate report"
       );
