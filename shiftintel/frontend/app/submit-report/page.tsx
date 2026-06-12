@@ -98,7 +98,11 @@ export default function SubmitReportPage() {
     } finally {
       setLoading(false);
     }
+    const data = await submitReport(formData)
+    toast.success(`Report generated! Email sent to ${data.email_to}`)
+    router.push(`/report/${data.id}`)
   };
+
 
   return (
     <div className="min-h-full bg-zinc-950 p-6 md:p-8">

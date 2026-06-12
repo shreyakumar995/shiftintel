@@ -2,7 +2,7 @@
 
 import AnomalyBanner from "@/components/AnomalyBanner";
 import SeverityBadge from "@/components/SeverityBadge";
-import { getReport } from "@/lib/api";
+import { getEmailByReport, getReport } from "@/lib/api";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -118,6 +118,13 @@ export default function ReportPage() {
   const [report, setReport] = useState<ReportView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emailLog, setEmailLog] = useState<{
+    subject: string;
+    to_email: string;
+    body: string;
+    sent_at: string;
+  } | null>(null);
+  const [showEmailBody, setShowEmailBody] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -145,11 +152,24 @@ export default function ReportPage() {
       }
     }
 
+    async function loadEmail() {
+      try {
+        const email = await getEmailByReport(id);
+        if (!cancelled) {
+          setEmailLog(email);
+        }
+      } catch {
+        // no email found — that's fine
+      }
+    }
+
     loadReport();
+    loadEmail();
     return () => {
       cancelled = true;
     };
   }, [id]);
+
 
   if (loading) {
     return (
@@ -158,7 +178,6 @@ export default function ReportPage() {
       </div>
     );
   }
-
   if (error || !report) {
     return (
       <div className="min-h-full bg-zinc-950 p-6 md:p-8">
@@ -304,6 +323,51 @@ export default function ReportPage() {
             {report.formal_report}
           </p>
         </section>
+
+        {emailLog && (
+          <section className="no-print rounded-2xl border border-white/10 bg-zinc-900 p-6 shadow-xl ring-1 ring-white/10 md:p-8">
+            <div className="mb-5 flex items-center gap-2 border-b border-white/10 pb-4">
+              <span className="text-sm font-semibold text-emerald-400">
+                📧 Email Notification Sent
+              </span>
+            </div>
+
+            <dl className="space-y-3 text-sm">
+              <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                <dt className="shrink-0 font-medium text-zinc-500 sm:w-16">To:</dt>
+                <dd className="text-zinc-400">{emailLog.to_email}</dd>
+              </div>
+              <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                <dt className="shrink-0 font-medium text-zinc-500 sm:w-16">Subject:</dt>
+                <dd className="text-zinc-200">{emailLog.subject}</dd>
+              </div>
+              <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                <dt className="shrink-0 font-medium text-zinc-500 sm:w-16">Sent at:</dt>
+                <dd className="text-zinc-300">
+                  {new Date(emailLog.sent_at).toLocaleString()}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setShowEmailBody((prev) => !prev)}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:border-white/20 hover:text-white"
+              >
+                <span aria-hidden>{showEmailBody ? "▾" : "▸"}</span>
+                View Email Body
+              </button>
+
+              {showEmailBody && (
+                <pre className="mt-3 max-h-48 overflow-y-auto rounded-lg bg-zinc-950 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-zinc-300">
+                  {emailLog.body}
+                </pre>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* PDF footer — hidden on screen */}
 <div className="pdf-header mt-8 border-t border-gray-200 pt-4">
   <p className="text-xs text-gray-500">

@@ -47,3 +47,8 @@ history:{role:string;content:string}[]){
   if (!res.ok) throw new Error('Failed to send chat')
   return res.json()
 }
+export async function getEmailByReport(reportId: string) {
+  const res = await fetch(`${BASE}/emails/${reportId}`)
+  if (!res.ok) throw new Error('No email found')
+  return res.json()
+}
