@@ -30,3 +30,21 @@ class Report(db.Model):
             "severity": self.severity,
             "created_at": self.created_at.isoformat()
         }
+class EmailLog(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    report_id=db.Column(db.Integer, db.ForeignKey('report.id'))
+    to_email=db.Column(db.String(100))
+    subject=db.Column(db.String(100))
+    body=db.Column(db.Text)
+    severity=db.Column(db.String(20))
+    sent_at=db.Column(db.DateTime,  default=datetime.utcnow)
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_id": self.report_id,
+            "to_email": self.to_email,
+            "subject": self.subject,
+            "body": self.body,
+            "severity": self.severity,
+            "sent_at": self.sent_at.isoformat()
+        }

@@ -1,5 +1,7 @@
 import json
 from ai_pipeline import client
+from email_service import simulate_send_email
+
 
 from flask import Blueprint, jsonify, request
 
@@ -8,7 +10,7 @@ from ai_pipeline import (
     extract_structured_report as extract_structured_data,
     generate_formal_report,
 )
-from models import Report, db
+from models import Report, db, EmailLog
 
 api = Blueprint("api", __name__)
 
@@ -49,6 +51,28 @@ def generate_report():
         db.session.add(report)
         db.session.commit()
 
+        email_data = simulate_send_email(
+            report_data={
+                "operator_name": data.get("operatorName"),
+                "zone": data.get("zone"),
+                "shift": data.get("shift"),
+                "date": data.get("date"),
+                "severity": structured.get("severity"),
+                "formal_report": formal_report,
+            },
+           anomaly_data=anomaly
+        )
+        email_log = EmailLog(
+            report_id=report.id,
+            to_email=email_data["to_email"],
+            subject=email_data["subject"],
+            body=email_data["body"],
+            severity=structured.get("severity"),
+        )
+        db.session.add(email_log)
+        db.session.commit()
+
+
         return jsonify(
             {
                 "id": report.id,
@@ -63,8 +87,12 @@ def generate_report():
                 "anomaly": anomaly,
                 "severity": report.severity,
                 "created_at": report.created_at.isoformat(),
-            }
-        )
+                "email_triggered": True,
+                "email_data": email_data["subject"],
+                "email_to": email_data["to_email"],
+            })
+                            
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -157,5 +185,27 @@ Never make up information."""
         reply = response.choices[0].message.content.strip()
         return jsonify({"reply": reply})
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@api.route("/emails", methods=["GET"])
+def get_emails():
+    try:
+        emails = EmailLog.query.order_by(
+            EmailLog.sent_at.desc()
+        ).all()
+        return jsonify([e.to_dict() for e in emails])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/emails/<int:report_id>", methods=["GET"])
+def get_email_by_report(report_id):
+    try:
+        email = EmailLog.query.filter_by(
+            report_id=report_id
+        ).first()
+        if not email:
+            return jsonify({"error": "No email found"}), 404
+        return jsonify(email.to_dict())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
